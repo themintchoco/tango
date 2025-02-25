@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 
 import { Button, Modal, Group } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
 
 import Board from './Board'
 import useMap from '../hooks/useMap'
@@ -16,7 +15,8 @@ const Game = ({ seeds, onNext } : GameProps) => {
   const [loading, setLoading] = useState(true)
   const [board, setBoard] = useState(() => '.'.repeat(36))
   const [constraints, setConstraints] = useState(() => '.'.repeat(108))
-  const [modalOpened, { open: modelOpen, close: modalClose }] = useDisclosure(false)
+  const [modalMessage, setMessage] = useState('')
+  const [modalShowButtons, setModalShowButtons] = useState(false)
 
   useEffect(() => {
     if (!seeds.length) return
@@ -26,9 +26,16 @@ const Game = ({ seeds, onNext } : GameProps) => {
       boards.set(seed, '')
 
       fetch(`/api/random/${seed}`)
-        .then(response => response.text())
+        .then(response => {
+          if (!response.ok) {
+            boards.set(seed, 'error')
+            return
+          }
+
+          return response.json()
+        })
         .then(data => {
-          boards.set(seed, data)
+          boards.set(seed, data.board)
         })
         .catch(console.error)
     }
@@ -46,6 +53,12 @@ const Game = ({ seeds, onNext } : GameProps) => {
 
     if (newBoard === constraints) return
 
+    if (newBoard === 'error') {
+      setMessage('Temporarily unable to generate a new board for you. Please try again later.')
+      setModalShowButtons(false)
+      return
+    }
+
     setBoard(newBoard.slice(0, 36))
     setConstraints(newBoard)
   }, [boards, constraints, seeds])
@@ -57,10 +70,11 @@ const Game = ({ seeds, onNext } : GameProps) => {
       .then(response => response.json())
       .then(data => {
         if (data.valid) {
-          modelOpen()
+          setMessage('Complete!')
+          setModalShowButtons(true)
         }
       })
-  }, [board, constraints, modelOpen])
+  }, [board, constraints, setMessage])
 
   const handleToggle = useCallback((i: number) => {
     setBoard(board => board.slice(0, i) + (board[i] === 'O' ? 'X' : board[i] === 'X' ? '.' : 'O') + board.slice(i+1))
@@ -76,18 +90,22 @@ const Game = ({ seeds, onNext } : GameProps) => {
 
   const handlePlayAgain = useCallback(() => {
     onNext?.()
-    modalClose()
-  }, [onNext, modalClose])
+    setMessage('')
+  }, [onNext])
 
   return (
     <>
       <Board board={board} constraints={constraints} loading={loading} onToggle={handleToggle} />
       <Button variant="default" my="lg" onClick={handleClear}>Clear</Button>
-      <Modal opened={modalOpened} onClose={modalClose} title="Complete!" centered>
-        <Group>
-          <Button variant="filled" onClick={handleShare}>Share</Button>
-          <Button variant="default" onClick={handlePlayAgain}>Play another</Button>
-        </Group>
+      <Modal opened={!!modalMessage} onClose={() => setMessage('')} title={modalMessage} centered>
+        {
+          modalShowButtons && (
+            <Group>
+              <Button variant="filled" onClick={handleShare}>Share</Button>
+              <Button variant="default" onClick={handlePlayAgain}>Play another</Button>
+            </Group>
+          )
+        }
       </Modal>
     </>
   )
