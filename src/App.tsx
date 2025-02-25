@@ -13,7 +13,7 @@ import { newHash } from './utils/hash'
 function App() {
   const [hash, setHash] = useHash()
   const [currentHash, setCurrentHash] = useState('')
-  const [seeds, { append: appendSeed, prepend: prependSeed, shift: shiftSeeds }] = useListState<string>()
+  const [seeds, { append: appendSeed, shift: shiftSeeds, setItem: setSeeds }] = useListState<string>()
 
   useEffect(() => {
     if (seeds.length) {
@@ -32,8 +32,8 @@ function App() {
       return
     }
 
-    prependSeed(hash)
-  }, [hash, currentHash, setCurrentHash, prependSeed, shiftSeeds])
+    setSeeds(0, hash)
+  }, [hash, currentHash, setCurrentHash, shiftSeeds, setSeeds])
 
   const handleNext = useCallback(() => {
     shiftSeeds()
