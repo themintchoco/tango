@@ -4,6 +4,7 @@ import { Button, Modal, Group } from '@mantine/core'
 
 import Board from './Board'
 import useMap from '../hooks/useMap'
+import { ToggleDirection } from '@/types/ToggleDirection'
 
 interface GameProps {
   seeds: string[]
@@ -76,8 +77,9 @@ const Game = ({ seeds, onNext } : GameProps) => {
       })
   }, [board, constraints, setMessage])
 
-  const handleToggle = useCallback((i: number) => {
-    setBoard(board => board.slice(0, i) + (board[i] === 'O' ? 'X' : board[i] === 'X' ? '.' : 'O') + board.slice(i+1))
+  const handleToggle = useCallback((i: number, direction: ToggleDirection) => {
+    const cells = "OX."
+    setBoard(board => board.slice(0, i) + cells[(cells.indexOf(board[i]) + direction + cells.length) % cells.length] + board.slice(i+1))
   }, [setBoard])
 
   const handleClear = useCallback(() => {
