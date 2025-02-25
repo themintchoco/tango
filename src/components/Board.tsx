@@ -1,60 +1,17 @@
-import { useCallback, useEffect, useState } from 'react'
 
-import { AspectRatio, Button, Center, Group, Loader, Modal, Paper, SimpleGrid } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import { AspectRatio, Center, Loader, Paper, SimpleGrid } from '@mantine/core'
 
-import Cell from './Cell'
 import styles from './Board.module.css'
+import Cell from './Cell'
 
 interface BoardProps {
-  hash: string
+  board: string
+  constraints: string
+  loading?: boolean
+  onToggle?: (i: number) => void
 }
 
-const Board = ({ hash } : BoardProps) => {
-  const [loading, setLoading] = useState(true)
-  const [board, setBoard] = useState(() => '.'.repeat(36))
-  const [constraints, setConstraints] = useState(() => '.'.repeat(108))
-  const [modalOpened, { open: modelOpen, close: modalClose }] = useDisclosure(false);
-
-  useEffect(() => {
-    if (!hash) return
-
-    setLoading(true)
-    fetch(`/api/random/${hash.slice(1)}`)
-      .then(response => response.text())
-      .then(data => {
-        setBoard(data.slice(0, 36))
-        setConstraints(data)
-      })
-      .finally(() => setLoading(false))
-
-  }, [hash, setBoard, setConstraints, setLoading])
-
-  useEffect(() => {
-    if (board.includes('.')) return
-
-    fetch(`/api/validate?board_data=${board}${constraints.slice(36)}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.valid) {
-          modelOpen()
-        }
-      })
-  }, [board, constraints, modelOpen])
-
-  const handleClear = useCallback(() => {
-    setBoard(constraints.slice(0, 36))
-  }, [constraints, setBoard])
-
-  const handleShare = useCallback(() => {
-    navigator.share({ url: location.href })
-  }, [])
-
-  const handlePlayAgain = useCallback(() => {
-    window.location.hash = ''
-    modalClose()
-  }, [modalClose])
-
+const Board = ({ board, constraints, loading, onToggle } : BoardProps) => {
   return (
     <>
       <Paper shadow="md" radius="xl" p="xl" onClick={(e) => {
@@ -72,20 +29,13 @@ const Board = ({ hash } : BoardProps) => {
                     right={constraints[i+36] === '.' ? '' : constraints[i+36]}
                     bottom={constraints[i+72] === '.' ? '' : constraints[i+72]}
                     canToggle={constraints[i] === '.'}
-                    onToggle={() => setBoard(board => board.slice(0, i) + (board[i] === 'O' ? 'X' : board[i] === 'X' ? '.' : 'O') + board.slice(i+1))}>{ cell }</Cell>
+                    onToggle={() => onToggle?.(i)}>{ cell }</Cell>
                 ))
               }
             </SimpleGrid>
           </Center>
         </AspectRatio>
       </Paper>
-      <Button variant="default" my="lg" onClick={handleClear}>Clear</Button>
-      <Modal opened={modalOpened} onClose={modalClose} title="Complete!" centered>
-        <Group>
-          <Button variant="filled" onClick={handleShare}>Share</Button>
-          <Button variant="default" onClick={handlePlayAgain}>Play another</Button>
-        </Group>
-      </Modal>
     </>
   )
 }

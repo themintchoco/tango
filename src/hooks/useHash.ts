@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from 'react'
 
 const useHash = () => {
-  const [hash, setHash] = useState(() => window.location.hash)
+  const [hash, setHash] = useState(() => window.location.hash.slice(1))
 
   const onHashChange = useCallback(() => {
-    setHash(window.location.hash)
+    setHash(window.location.hash.slice(1))
   }, [setHash])
 
   useEffect(() => {
@@ -13,6 +13,7 @@ const useHash = () => {
   })
 
   const _setHash = useCallback((newHash: string) => {
+    setHash(newHash)
     window.location.hash = newHash
   }, [])
 
