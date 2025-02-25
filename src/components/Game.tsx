@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 
 import { Button, Modal, Group } from '@mantine/core'
+import { useListState } from '@mantine/hooks'
 
 import Board from './Board'
 import useMap from '../hooks/useMap'
 import { ToggleDirection } from '@/types/ToggleDirection'
+import { Move } from '@/types/Move'
 
 interface GameProps {
   seeds: string[]
@@ -15,6 +17,7 @@ const Game = ({ seeds, onNext } : GameProps) => {
   const boards = useMap<string, string>()
   const [loading, setLoading] = useState(true)
   const [board, setBoard] = useState(() => '.'.repeat(36))
+  const [moves, { append: pushMove, pop: popMove, setState: setMoves }] = useListState<Move>()
   const [constraints, setConstraints] = useState(() => '.'.repeat(108))
   const [modalMessage, setMessage] = useState('')
   const [modalShowButtons, setModalShowButtons] = useState(false)
@@ -77,14 +80,27 @@ const Game = ({ seeds, onNext } : GameProps) => {
       })
   }, [board, constraints, setMessage])
 
-  const handleToggle = useCallback((i: number, direction: ToggleDirection) => {
+  const updateBoard = useCallback((i: number, direction: ToggleDirection) => {
     const cells = "OX."
     setBoard(board => board.slice(0, i) + cells[(cells.indexOf(board[i]) + direction + cells.length) % cells.length] + board.slice(i+1))
   }, [setBoard])
 
+  const handleToggle = useCallback((position: number, direction: ToggleDirection) => {
+    updateBoard(position, direction)
+    pushMove({ position, direction })
+  }, [updateBoard, pushMove])
+
+  const handleUndo = useCallback(() => {
+    if (!moves.length) return
+    const move = moves[moves.length - 1]
+    popMove()
+    updateBoard(move.position, -move.direction)
+  }, [moves, popMove, updateBoard])
+
   const handleClear = useCallback(() => {
     setBoard(constraints.slice(0, 36))
-  }, [constraints, setBoard])
+    setMoves([])
+  }, [constraints, setBoard, setMoves])
 
   const handleShare = useCallback(() => {
     navigator.share({ url: location.href })
@@ -98,7 +114,10 @@ const Game = ({ seeds, onNext } : GameProps) => {
   return (
     <>
       <Board board={board} constraints={constraints} loading={loading} onToggle={handleToggle} />
-      <Button variant="default" my="lg" onClick={handleClear}>Clear</Button>
+      <Group my="lg">
+        <Button variant="default" onClick={handleUndo} disabled={!moves.length}>Undo</Button>
+        <Button variant="default" onClick={handleClear}>Clear</Button>
+      </Group>
       <Modal opened={!!modalMessage} onClose={() => setMessage('')} title={modalMessage} centered>
         {
           modalShowButtons && (
