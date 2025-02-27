@@ -6,6 +6,7 @@ import { useListState } from '@mantine/hooks'
 import Board from './Board'
 import Timer from './Timer'
 import useMap from '../hooks/useMap'
+import { checkValid } from '../utils/game'
 import { ToggleDirection } from '@/types/ToggleDirection'
 import { Move } from '@/types/Move'
 
@@ -74,18 +75,12 @@ const Game = ({ seeds, onNext } : GameProps) => {
   }, [seeds, boards, constraints])
 
   useEffect(() => {
-    if (board.includes('.')) return
+    if (!checkValid(board, constraints)) return
 
-    fetch(`/api/validate?board_data=${board}${constraints.slice(36)}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.valid) {
-          setActive(false)
-          setModalTitle('Complete!')
-          setModalMessage(`Board completed in ${lastTime.toFixed(2)} seconds.`)
-          setModalShowButtons(true)
-        }
-      })
+    setActive(false)
+    setModalTitle('Complete!')
+    setModalMessage(`Board completed in ${lastTime.toFixed(2)} seconds.`)
+    setModalShowButtons(true)
   }, [board, constraints, lastTime])
 
   const updateBoard = useCallback((i: number, direction: ToggleDirection) => {
