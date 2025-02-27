@@ -23,7 +23,7 @@ function App() {
 
     if (seeds.length >= 2) return
     appendSeed(newHash())
-  }, [seeds, setHash, setCurrentHash, appendSeed])
+  }, [seeds, setHash, appendSeed])
 
   useEffect(() => {
     if (hash === currentHash) return
@@ -33,7 +33,7 @@ function App() {
     }
 
     setSeeds(0, hash)
-  }, [hash, currentHash, setCurrentHash, shiftSeeds, setSeeds])
+  }, [hash, currentHash, shiftSeeds, setSeeds])
 
   const handleNext = useCallback(() => {
     shiftSeeds()

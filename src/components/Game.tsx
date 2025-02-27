@@ -4,6 +4,7 @@ import { Button, Modal, Group } from '@mantine/core'
 import { useListState } from '@mantine/hooks'
 
 import Board from './Board'
+import Timer from './Timer'
 import useMap from '../hooks/useMap'
 import { ToggleDirection } from '@/types/ToggleDirection'
 import { Move } from '@/types/Move'
@@ -16,10 +17,13 @@ interface GameProps {
 const Game = ({ seeds, onNext } : GameProps) => {
   const boards = useMap<string, string>()
   const [loading, setLoading] = useState(true)
+  const [active, setActive] = useState(false)
+  const [lastTime, setLastTime] = useState(0)
   const [board, setBoard] = useState(() => '.'.repeat(36))
   const [moves, { append: pushMove, pop: popMove, setState: setMoves }] = useListState<Move>()
   const [constraints, setConstraints] = useState(() => '.'.repeat(108))
-  const [modalMessage, setMessage] = useState('')
+  const [modalTitle, setModalTitle] = useState('')
+  const [modalMessage, setModalMessage] = useState('')
   const [modalShowButtons, setModalShowButtons] = useState(false)
 
   useEffect(() => {
@@ -58,14 +62,16 @@ const Game = ({ seeds, onNext } : GameProps) => {
     if (newBoard === constraints) return
 
     if (newBoard === 'error') {
-      setMessage('Temporarily unable to generate a new board for you. Please try again later.')
+      setModalTitle('Error')
+      setModalMessage('Temporarily unable to generate a new board for you. Please try again later.')
       setModalShowButtons(false)
       return
     }
 
+    setActive(true)
     setBoard(newBoard.slice(0, 36))
     setConstraints(newBoard)
-  }, [boards, constraints, seeds])
+  }, [seeds, boards, constraints])
 
   useEffect(() => {
     if (board.includes('.')) return
@@ -74,16 +80,18 @@ const Game = ({ seeds, onNext } : GameProps) => {
       .then(response => response.json())
       .then(data => {
         if (data.valid) {
-          setMessage('Complete!')
+          setActive(false)
+          setModalTitle('Complete!')
+          setModalMessage(`Board completed in ${lastTime.toFixed(2)} seconds.`)
           setModalShowButtons(true)
         }
       })
-  }, [board, constraints, setMessage])
+  }, [board, constraints, lastTime])
 
   const updateBoard = useCallback((i: number, direction: ToggleDirection) => {
     const cells = "OX."
     setBoard(board => board.slice(0, i) + cells[(cells.indexOf(board[i]) + direction + cells.length) % cells.length] + board.slice(i+1))
-  }, [setBoard])
+  }, [])
 
   const handleToggle = useCallback((position: number, direction: ToggleDirection) => {
     updateBoard(position, direction)
@@ -100,28 +108,31 @@ const Game = ({ seeds, onNext } : GameProps) => {
   const handleClear = useCallback(() => {
     setBoard(constraints.slice(0, 36))
     setMoves([])
-  }, [constraints, setBoard, setMoves])
+  }, [constraints, setMoves])
 
   const handleShare = useCallback(() => {
-    navigator.share({ url: location.href })
-  }, [])
+    navigator.share({ text: `I completed a Tango Unlimited board in ${lastTime.toFixed(2)} seconds! Challenge me at ${location.href}` })
+  }, [lastTime])
 
   const handlePlayAgain = useCallback(() => {
     onNext?.()
-    setMessage('')
+    setModalTitle('')
+    setModalMessage('')
   }, [onNext])
 
   return (
     <>
       <Board board={board} constraints={constraints} loading={loading} onToggle={handleToggle} />
-      <Group my="lg">
+      <Timer active={active} onStart={(_, { reset }) => reset()} onStop={value => setLastTime(value)} />
+      <Group mb="lg">
         <Button variant="default" onClick={handleUndo} disabled={!moves.length}>Undo</Button>
         <Button variant="default" onClick={handleClear}>Clear</Button>
       </Group>
-      <Modal opened={!!modalMessage} onClose={() => setMessage('')} title={modalMessage} centered>
+      <Modal opened={!!modalTitle} onClose={() => setModalTitle('')} title={modalTitle} centered>
+        { modalMessage }
         {
           modalShowButtons && (
-            <Group>
+            <Group mt="lg">
               <Button variant="filled" onClick={handleShare}>Share</Button>
               <Button variant="default" onClick={handlePlayAgain}>Play another</Button>
             </Group>
