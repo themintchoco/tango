@@ -12,7 +12,7 @@ Tango, now truly unlimited! All boards are randomly generated - no two are the s
 
 ## Play now
 
-Play Tango Unlimited at [tango.roytay.dev](https://tango.roytay.dev/). 
+Play Tango Unlimited at [tango.mintcho.co](https://tango.mintcho.co/). 
 
 ## Disclaimer
 
