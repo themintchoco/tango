@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { Group, Paper, Text } from '@mantine/core'
 import { useInterval } from '@mantine/hooks'
 import { IconAlarm } from '@tabler/icons-react'
+
+import styles from './Timer.module.css'
 
 interface TimerProps {
   active: boolean
@@ -15,24 +17,24 @@ const Timer = ({ active, onStart, onStop } : TimerProps) => {
   const [value, setValue] = useState(0)
   const { start, stop, active: currentlyActive } = useInterval(() => setValue((+new Date() - reference) / 1000), 1000)
 
-  useEffect(() => {
-    const reset = () => {
-      setValue(0)
-      setReference(+new Date())
-    }
+  const reset = useCallback(() => {
+    setValue(0)
+    setReference(+new Date())
+  }, [])
 
+  useEffect(() => {
     if (active && !currentlyActive) {
       start()
-      onStart?.(value, { reset })
+      onStart?.((+new Date() - reference) / 1000, { reset })
     }
 
     if (!active && currentlyActive) {
       stop()
-      onStop?.(value, { reset })
+      onStop?.((+new Date() - reference) / 1000, { reset })
     }
 
     return () => stop()
-  }, [active, currentlyActive, value, start, stop, onStart, onStop])
+  }, [active, currentlyActive, reference, start, stop, onStart, onStop, reset])
 
   const minutes = Math.floor(value / 60)
   const seconds = Math.floor(value % 60)
@@ -41,7 +43,7 @@ const Timer = ({ active, onStart, onStop } : TimerProps) => {
     <Paper radius="xl" withBorder mt="lg">
       <Group justify="space-around" px="md" py="xs">
         <IconAlarm />
-        <Text>{`${minutes}:${seconds.toString().padStart(2, '0')}`}</Text>
+        <Text className={styles.timer}>{`${minutes}:${seconds.toString().padStart(2, '0')}`}</Text>
       </Group>
     </Paper>
   )
