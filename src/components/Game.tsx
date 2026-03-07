@@ -6,7 +6,7 @@ import { useListState } from '@mantine/hooks'
 import Board from './Board'
 import Timer from './Timer'
 import useMap from '../hooks/useMap'
-import { checkValid } from '../utils/game'
+import { checkValid, generateBoard } from '../utils/game'
 import { ToggleDirection } from '@/types/ToggleDirection'
 import { Move } from '@/types/Move'
 
@@ -34,19 +34,30 @@ const Game = ({ seeds, onNext } : GameProps) => {
       if (boards.has(seed)) continue
       boards.set(seed, '')
 
-      fetch(`/api/random/${seed}`)
-        .then(response => {
-          if (!response.ok) {
-            boards.set(seed, 'error')
-            return
-          }
+      // Use server-generated (legacy) boards for old seeds to preserve existing links
+      // Old seeds were defined to be exactly 10 chars long
+      if (seed.length === 10) {
+        fetch(`/api/random/${seed}`)
+          .then(response => {
+            if (!response.ok) {
+              boards.set(seed, 'error')
+              return
+            }
 
-          return response.json()
-        })
-        .then(data => {
-          boards.set(seed, data.board)
-        })
-        .catch(console.error)
+            return response.json()
+          })
+          .then(data => {
+            boards.set(seed, data.board)
+          })
+          .catch(console.error)
+        continue
+      }
+
+      try {
+        boards.set(seed, generateBoard(seed))
+      } catch {
+        boards.set(seed, 'error')
+      }
     }
   }, [seeds, boards, constraints])
 
@@ -84,7 +95,7 @@ const Game = ({ seeds, onNext } : GameProps) => {
   }, [board, constraints, lastTime])
 
   const updateBoard = useCallback((i: number, direction: ToggleDirection) => {
-    const cells = "OX."
+    const cells = 'OX.'
     setBoard(board => board.slice(0, i) + cells[(cells.indexOf(board[i]) + direction + cells.length) % cells.length] + board.slice(i+1))
   }, [])
 

@@ -13,6 +13,7 @@
     "@mantine/core": "^7.17.0",
     "@mantine/hooks": "^7.17.0",
     "@tabler/icons-react": "^3.30.0",
+    "random-seedable": "^1.0.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
