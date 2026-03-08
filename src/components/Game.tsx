@@ -5,8 +5,8 @@ import { useListState } from '@mantine/hooks'
 
 import Board from './Board'
 import Timer from './Timer'
+import useGame from '../hooks/useGame'
 import useMap from '../hooks/useMap'
-import { checkValid, generateBoard } from '../utils/game'
 import { ToggleDirection } from '@/types/ToggleDirection'
 import { Move } from '@/types/Move'
 
@@ -16,6 +16,7 @@ interface GameProps {
 }
 
 const Game = ({ seeds, onNext } : GameProps) => {
+  const game = useGame()
   const boards = useMap<string, string>()
   const [loading, setLoading] = useState(true)
   const [active, setActive] = useState(false)
@@ -49,17 +50,20 @@ const Game = ({ seeds, onNext } : GameProps) => {
           .then(data => {
             boards.set(seed, data.board)
           })
-          .catch(console.error)
-        continue
-      }
-
-      try {
-        boards.set(seed, generateBoard(seed))
-      } catch {
-        boards.set(seed, 'error')
+          .catch(() => {
+            boards.set(seed, 'error')
+          })
+      } else {
+        game.generateBoard(seed)
+          .then(board => {
+            boards.set(seed, board)
+          })
+          .catch(() => {
+            boards.set(seed, 'error')
+          })
       }
     }
-  }, [seeds, boards, constraints])
+  }, [seeds, boards, constraints, game])
 
   useEffect(() => {
     setLoading(true)
@@ -80,19 +84,25 @@ const Game = ({ seeds, onNext } : GameProps) => {
       return
     }
 
-    setActive(true)
     setBoard(newBoard.slice(0, 36))
     setConstraints(newBoard)
   }, [seeds, boards, constraints])
 
   useEffect(() => {
-    if (!checkValid(board, constraints)) return
-
-    setActive(false)
-    setModalTitle('Complete!')
-    setModalMessage(`Board completed in ${lastTime.toFixed(2)} seconds.`)
-    setModalShowButtons(true)
-  }, [board, constraints, lastTime])
+    game.checkValid(board, constraints)
+      .then(valid => {
+        if (valid) {
+          setActive(false)
+          setModalTitle('Complete!')
+          setModalMessage(`Board completed in ${lastTime.toFixed(2)} seconds.`)
+          setModalShowButtons(true)
+        } else {
+          setActive(true)
+          setModalTitle('')
+          setModalMessage('')
+        }
+      })
+  }, [board, constraints, game, lastTime])
 
   const updateBoard = useCallback((i: number, direction: ToggleDirection) => {
     const cells = 'OX.'
@@ -122,8 +132,6 @@ const Game = ({ seeds, onNext } : GameProps) => {
 
   const handlePlayAgain = useCallback(() => {
     onNext?.()
-    setModalTitle('')
-    setModalMessage('')
   }, [onNext])
 
   return (
