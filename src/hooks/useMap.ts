@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps -- v is used as additional dependency to signal map update */
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
 const useMap = <K, V>(initialState?: Iterable<readonly [K, V]>) => {
   const [v, setV] = useState(0)
@@ -18,7 +18,7 @@ const useMap = <K, V>(initialState?: Iterable<readonly [K, V]>) => {
     return mapRef.current.has(key)
   }, [v])
 
-  return { get, set, has } as const
+  return useMemo(() => ({ get, set, has }), [get, set, has])
 }
 
 export default useMap

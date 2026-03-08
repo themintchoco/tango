@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useRef } from 'react'
+import { RefObject, useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { Function } from '../workers/game.worker'
 
@@ -37,10 +37,10 @@ const useGame = () => {
     return post(Function.generateBoard, seed) as Promise<string>
   }, [post])
 
-  return {
+  return useMemo(() => ({
     checkValid,
     generateBoard,
-  }
+  }), [checkValid, generateBoard])
 }
 
 export default useGame
