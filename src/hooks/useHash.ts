@@ -14,7 +14,7 @@ const useHash = () => {
 
   const _setHash = useCallback((newHash: string) => {
     setHash(newHash)
-    window.location.hash = newHash
+    window.history.replaceState(null, '', `#${newHash}`)
   }, [])
 
   return [hash, _setHash] as const
