@@ -1,7 +1,7 @@
 import { ReactNode, useCallback } from 'react'
 
-import { Center, Text, ThemeIcon } from '@mantine/core'
-import { IconCircleFilled, IconMoonFilled } from '@tabler/icons-react'
+import { Center, ThemeIcon } from '@mantine/core'
+import { IconCircleFilled, IconEqual, IconMoonFilled, IconX } from '@tabler/icons-react'
 
 import styles from './Cell.module.css'
 import { ToggleDirection } from '@/types/ToggleDirection'
@@ -29,18 +29,28 @@ const Cell = ({ canToggle = true, onToggle, right, bottom, children } : CellProp
   }, [canToggle, onToggle])
 
   return (
-    <Center className={styles.container} onClick={handleClick} onContextMenu={handleClick}>
-      <ThemeIcon variant="white" bg={canToggle ? 'white' : 'gray.0'} color={children === 'O' ? 'yellow' : 'indigo'} size="xl">
+    <Center className={styles.container} onClick={handleClick} onContextMenu={handleClick} c="dark.3">
+      <ThemeIcon variant="white" bg={canToggle ? 'white' : 'gray.0'} color={children === 'O' ? 'yellow' : 'indigo'} size="100%">
         { 
           children === 'O' ? (
-            <IconCircleFilled />
+            <IconCircleFilled size="45%" />
           ) : children === 'X' ? (
-            <IconMoonFilled />
+            <IconMoonFilled size="45%" />
           ) : null
         }
       </ThemeIcon>
-      <Text className={styles.right}>{ right }</Text>
-      <Text className={styles.bottom}>{ bottom }</Text>
+
+      {
+        right && (
+          right === '=' ? <IconEqual size="35%" className={styles.right} /> : <IconX size="35%" className={styles.right} />
+        )
+      }
+
+      {
+        bottom && (
+          bottom === '=' ? <IconEqual size="35%" className={styles.bottom} /> : <IconX size="35%" className={styles.bottom} />
+        )
+      }
     </Center>
   )
 }

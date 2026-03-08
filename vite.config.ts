@@ -4,6 +4,11 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  css: {
+    modules: {
+      localsConvention: 'camelCaseOnly',
+    },
+  },
   resolve: {
     alias: {
       '@/types': path.resolve(__dirname, "./src/@types")
