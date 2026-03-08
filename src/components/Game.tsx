@@ -86,7 +86,8 @@ const Game = ({ seeds, onNext } : GameProps) => {
 
     setBoard(newBoard.slice(0, 36))
     setConstraints(newBoard)
-  }, [seeds, boards, constraints])
+    setMoves([])
+  }, [seeds, boards, constraints, setMoves])
 
   useEffect(() => {
     game.checkValid(board, constraints)
