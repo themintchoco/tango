@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 
-import { Button, Modal, Group } from '@mantine/core'
+import { Button, Group } from '@mantine/core'
 import { useListState } from '@mantine/hooks'
+import { modals } from '@mantine/modals'
 
 import Board from './Board'
+import GameCompleteModal from './GameCompleteModal'
 import Timer from './Timer'
 import useGame from '../hooks/useGame'
 import useMap from '../hooks/useMap'
@@ -24,9 +26,7 @@ const Game = ({ seeds, onNext } : GameProps) => {
   const [board, setBoard] = useState(() => '.'.repeat(36))
   const [moves, { append: pushMove, pop: popMove, setState: setMoves }] = useListState<Move>()
   const [constraints, setConstraints] = useState(() => '.'.repeat(108))
-  const [modalTitle, setModalTitle] = useState('')
-  const [modalMessage, setModalMessage] = useState('')
-  const [modalShowButtons, setModalShowButtons] = useState(false)
+  const [completed, setCompleted] = useState(false)
 
   useEffect(() => {
     if (!seeds.length) return
@@ -78,9 +78,10 @@ const Game = ({ seeds, onNext } : GameProps) => {
     if (newBoard === constraints) return
 
     if (newBoard === 'error') {
-      setModalTitle('Error')
-      setModalMessage('Temporarily unable to generate a new board for you. Please try again later.')
-      setModalShowButtons(false)
+      modals.open({
+        title: 'Error',
+        children: 'Temporarily unable to generate a new board for you. Please try again later.',
+      })
       return
     }
 
@@ -94,13 +95,10 @@ const Game = ({ seeds, onNext } : GameProps) => {
       .then(valid => {
         if (valid) {
           setActive(false)
-          setModalTitle('Complete!')
-          setModalMessage(`Board completed in ${lastTime.toFixed(2)} seconds.`)
-          setModalShowButtons(true)
+          setCompleted(true)
         } else {
           setActive(true)
-          setModalTitle('')
-          setModalMessage('')
+          setCompleted(false)
         }
       })
   }, [board, constraints, game, lastTime])
@@ -143,17 +141,7 @@ const Game = ({ seeds, onNext } : GameProps) => {
         <Button variant="default" onClick={handleUndo} disabled={!moves.length}>Undo</Button>
         <Button variant="default" onClick={handleClear}>Clear</Button>
       </Group>
-      <Modal opened={!!modalTitle} onClose={() => setModalTitle('')} title={modalTitle} centered>
-        { modalMessage }
-        {
-          modalShowButtons && (
-            <Group mt="lg">
-              <Button variant="filled" onClick={handleShare}>Share</Button>
-              <Button variant="default" onClick={handlePlayAgain}>Play another</Button>
-            </Group>
-          )
-        }
-      </Modal>
+      <GameCompleteModal show={completed} time={lastTime} gameBoard={board} gameConstraints={constraints} gameMoves={moves} onReplay={handleClear} onNext={handlePlayAgain} onShare={handleShare} />
     </>
   )
 }
