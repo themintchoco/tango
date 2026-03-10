@@ -5,6 +5,7 @@ import Confetti from 'react-confetti'
 import { Button, Group, Modal, Slider, Stack, Text, useMantineTheme, useMatches } from '@mantine/core'
 import { IconArrowNarrowRight, IconReload, IconShare3 } from '@tabler/icons-react'
 
+import styles from './GameCompleteModal.module.css'
 import Board from './Board'
 import { Move } from '@/types/Move'
 
@@ -34,14 +35,16 @@ const GameCompleteModal = ({ show, time, gameBoard, gameConstraints, gameMoves, 
   const [sliderValue, setSliderValue] = useState(0)
 
   const showBoardAtMove = useCallback((position: number) => {
-    if (!displayedMoves) return
+    if (!displayedMoves || !gameConstraints) return
+    const newBoard = gameConstraints.split('').slice(0, 36)
     const cells = 'OX.'
 
-    setDisplayedGameBoard(gameConstraints?.slice(0, 36))
     for (let i = 0; i < position; i++) {
       const [p, d] = [displayedMoves[i].position, displayedMoves[i].direction]
-      setDisplayedGameBoard(board => board && board.slice(0, p) + cells[(cells.indexOf(board[p]) + d + cells.length) % cells.length] + board.slice(p + 1))
+      newBoard[p] = cells[(cells.indexOf(newBoard[p]) + d + cells.length) % cells.length]
     }
+
+    setDisplayedGameBoard(newBoard.join(''))
   }, [displayedMoves, gameConstraints])
 
   const handleSliderChange = useCallback((value: number) => {
@@ -83,11 +86,21 @@ const GameCompleteModal = ({ show, time, gameBoard, gameConstraints, gameMoves, 
   }, [displayedMoves, showBoardAtMove])
 
   return (
-    <Modal opened={show} onClose={onNext} withCloseButton={false} size="lg" radius="xl" fullScreen={fullScreen} overlayProps={{ blur: 3 }} transitionProps={{ duration: 200, transition: 'fade-up' }} padding={0} centered>
+    <Modal
+      opened={show}
+      onClose={onNext}
+      withCloseButton={false}
+      size="lg"
+      radius="xl"
+      fullScreen={fullScreen}
+      overlayProps={{ blur: 3 }}
+      transitionProps={{ duration: 200, transition: 'fade-up' }}
+      padding={0}
+      centered>
       <Stack bg="teal.6" c="white" p="xl" justify="space-around" h={ fullScreen ? '100dvh' : undefined }>
         <Stack align="center" gap={0}>
           <Text size="xl" fw={700} tt="uppercase">Board Complete</Text>
-          <Text fz="4em" fw={900}>{ format(time * 1000) }</Text>
+          <Text fz="6em" fw={900}>{ format(time * 1000) }</Text>
         </Stack>
 
         {
@@ -98,13 +111,13 @@ const GameCompleteModal = ({ show, time, gameBoard, gameConstraints, gameMoves, 
 
         {
           displayedMoves && (
-            <Slider value={sliderValue} size="lg" label={null} max={displayedMoves.length} onChange={handleSliderChange} />
+            <Slider className={styles.slider} value={sliderValue} size="lg" label={null} max={displayedMoves.length} onChange={handleSliderChange} />
           )
         }
 
         <Group mt="xl">
           <Button variant="white" radius="lg" size="md" onClick={onReplay}><IconReload /></Button>
-          <Button variant="white" radius="lg" size="md" flex="1" rightSection={<IconArrowNarrowRight size={14} />} onClick={onNext} data-autofocus>Play Next</Button>
+          <Button variant="white" radius="lg" size="md" flex="1" rightSection={<IconArrowNarrowRight />} onClick={onNext} data-autofocus>Play Next</Button>
           <Button variant="white" radius="lg" size="md" onClick={onShare}><IconShare3 /></Button>
         </Group>
       </Stack>

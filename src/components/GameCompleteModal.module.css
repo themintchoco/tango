@@ -1,0 +1,16 @@
+.slider {
+    padding-inline: var(--mantine-spacing-xl);
+
+    :global(.mantine-Slider-thumb) {
+        padding: var(--mantine-spacing-sm) var(--mantine-spacing-xl);
+        border: 0;
+    }
+
+    :global(.mantine-Slider-track)::before {
+        inset-inline-end: calc(-1 * var(--mantine-spacing-xl));
+    }
+
+    :global(.mantine-Slider-bar) {
+        inset-inline-start: calc(-1 * var(--mantine-spacing-xl));
+    }
+}
