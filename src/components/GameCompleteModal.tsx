@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import clsx from 'clsx'
 import format from 'format-duration'
 import Confetti from 'react-confetti'
 import { Button, Group, Modal, Slider, Stack, Text, useMantineTheme, useMatches } from '@mantine/core'
@@ -24,9 +25,14 @@ const GameCompleteModal = ({ show, time, gameBoard, gameConstraints, gameMoves, 
   const theme = useMantineTheme()
   const fullScreen = useMatches({
     base: true,
-    lg: false,
+    sm: false,
+  })
+  const compactButtons = useMatches({
+    base: true,
+    xs: false,
   })
 
+  const ref = useRef<HTMLDivElement>(null)
   const colors = useMemo(() => Object.values(theme.colors).flat(), [theme.colors])
   const [showing, setShowing] = useState(false)
   const [displayedGameBoard, setDisplayedGameBoard] = useState(gameBoard)
@@ -90,39 +96,41 @@ const GameCompleteModal = ({ show, time, gameBoard, gameConstraints, gameMoves, 
       opened={show}
       onClose={onNext}
       withCloseButton={false}
-      size="lg"
+      size="md"
       radius="xl"
       fullScreen={fullScreen}
       overlayProps={{ blur: 3 }}
       transitionProps={{ duration: 200, transition: 'fade-up' }}
       padding={0}
       centered>
-      <Stack bg="teal.6" c="white" p="xl" justify="space-around" h={ fullScreen ? '100dvh' : undefined }>
+      <Stack ref={ref} bg="teal.6" c="white" p="xl" justify="space-around" mih={ fullScreen ? '100dvh' : undefined }>
         <Stack align="center" gap={0}>
           <Text size="xl" fw={700} tt="uppercase">Board Complete</Text>
-          <Text fz="6em" fw={900}>{ format(time * 1000) }</Text>
+          <Text fz="6em" fw={900} lh="normal">{ format(time * 1000) }</Text>
         </Stack>
 
         {
           displayedGameBoard && displayedGameConstraints && (
-            <Board board={displayedGameBoard} constraints={displayedGameConstraints} />
+            <Stack>
+              <Board board={displayedGameBoard} constraints={displayedGameConstraints} />
+
+              {
+                displayedMoves && (
+                  <Slider className={styles.slider} value={sliderValue} size="lg" label={null} max={displayedMoves.length} onChange={handleSliderChange} />
+                )
+              }
+            </Stack>
           )
         }
 
-        {
-          displayedMoves && (
-            <Slider className={styles.slider} value={sliderValue} size="lg" label={null} max={displayedMoves.length} onChange={handleSliderChange} />
-          )
-        }
-
-        <Group mt="xl">
-          <Button variant="white" radius="lg" size="md" onClick={onReplay}><IconReload /></Button>
-          <Button variant="white" radius="lg" size="md" flex="1" rightSection={<IconArrowNarrowRight />} onClick={onNext} data-autofocus>Play Next</Button>
+        <Group className={clsx(styles.buttons, compactButtons && styles.compact)} mt="lg">
+          <Button variant="white" radius="lg" size="md" onClick={onReplay} ><IconReload /></Button>
+          <Button variant="white" radius="lg" size="md" rightSection={<IconArrowNarrowRight />} onClick={onNext} data-autofocus>Play Next</Button>
           <Button variant="white" radius="lg" size="md" onClick={onShare}><IconShare3 /></Button>
         </Group>
       </Stack>
 
-      <Confetti recycle={false} colors={colors} numberOfPieces={400} gravity={0.25} />
+      <Confetti width={ref.current?.clientWidth} height={ref.current?.clientHeight} recycle={false} colors={colors} numberOfPieces={400} gravity={0.25} />
     </Modal>
   )
 }

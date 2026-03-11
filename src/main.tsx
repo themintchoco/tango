@@ -10,6 +10,13 @@ import App from './App.tsx'
 
 const theme = createTheme({
   primaryColor: 'indigo',
+  breakpoints: {
+    xs: '24em',
+    sm: '30em',
+    md: '48em',
+    lg: '64em',
+    xl: '74em',
+  },
 })
 
 createRoot(document.getElementById('root')!).render(
