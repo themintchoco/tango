@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import format from 'format-duration'
 import Confetti from 'react-confetti'
-import { Button, Group, Modal, Slider, Stack, Text, useMantineTheme, useMatches } from '@mantine/core'
+import { Badge, Button, Group, Modal, Slider, Stack, Text, useMantineTheme, useMatches } from '@mantine/core'
 import { IconArrowNarrowRight, IconReload, IconShare3 } from '@tabler/icons-react'
 
 import styles from './GameCompleteModal.module.css'
@@ -12,6 +12,7 @@ import { Move } from '@/types/Move'
 
 interface GameCompleteModalProps {
   show: boolean
+  flawless: boolean
   time: number
   gameBoard?: string
   gameConstraints?: string
@@ -21,7 +22,7 @@ interface GameCompleteModalProps {
   onShare: () => void
 }
 
-const GameCompleteModal = ({ show, time, gameBoard, gameConstraints, gameMoves, onReplay, onNext, onShare } : GameCompleteModalProps) => {
+const GameCompleteModal = ({ show, flawless, time, gameBoard, gameConstraints, gameMoves, onReplay, onNext, onShare } : GameCompleteModalProps) => {
   const theme = useMantineTheme()
   const fullScreen = useMatches({
     base: true,
@@ -35,6 +36,7 @@ const GameCompleteModal = ({ show, time, gameBoard, gameConstraints, gameMoves, 
   const ref = useRef<HTMLDivElement>(null)
   const colors = useMemo(() => Object.values(theme.colors).flat(), [theme.colors])
   const [showing, setShowing] = useState(false)
+  const [displayedFlawless, setDisplayedFlawless] = useState(flawless)
   const [displayedGameBoard, setDisplayedGameBoard] = useState(gameBoard)
   const [displayedGameConstraints, setDisplayedGameConstraints] = useState(gameConstraints)
   const [displayedMoves, setDisplayedMoves] = useState(gameMoves)
@@ -67,11 +69,12 @@ const GameCompleteModal = ({ show, time, gameBoard, gameConstraints, gameMoves, 
     if (showing) return
 
     setShowing(true)
+    setDisplayedFlawless(flawless)
     setDisplayedGameBoard(gameMoves ? gameConstraints?.slice(0, 36) : gameBoard)
     setDisplayedGameConstraints(gameConstraints)
     setDisplayedMoves(gameMoves)
     setSliderValue(0)
-  }, [show, showing, gameBoard, gameConstraints, gameMoves])
+  }, [show, showing, flawless, gameBoard, gameConstraints, gameMoves])
 
   useEffect(() => {
     if (!displayedMoves) return
@@ -105,7 +108,14 @@ const GameCompleteModal = ({ show, time, gameBoard, gameConstraints, gameMoves, 
       centered>
       <Stack ref={ref} bg="teal.6" c="white" p="xl" justify="space-around" mih={ fullScreen ? '100dvh' : undefined }>
         <Stack align="center" gap={0}>
-          <Text size="xl" fw={700} tt="uppercase">Board Complete</Text>
+          {
+            displayedFlawless ? (
+              <Badge color="yellow" size="lg">Flawless</Badge>
+            ) : (
+              <Text size="xl" fw={700} tt="uppercase">Board Complete</Text>
+            )
+          }
+
           <Text fz="6em" fw={900} lh="normal">{ format(time * 1000) }</Text>
         </Stack>
 

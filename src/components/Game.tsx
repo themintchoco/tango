@@ -24,9 +24,11 @@ const Game = ({ seeds, onNext } : GameProps) => {
   const [active, setActive] = useState(false)
   const [lastTime, setLastTime] = useState(0)
   const [board, setBoard] = useState(() => '.'.repeat(36))
-  const [moves, { append: pushMove, pop: popMove, setState: setMoves }] = useListState<Move>()
   const [constraints, setConstraints] = useState(() => '.'.repeat(108))
+  const [moves, { append: pushMove, pop: popMove, setState: setMoves }] = useListState<Move>()
+  const [touched, { append: pushTouched, setState: setTouched }] = useListState<number>()
   const [completed, setCompleted] = useState(false)
+  const [flawless, setFlawless] = useState(false)
 
   useEffect(() => {
     if (!seeds.length) return
@@ -88,7 +90,9 @@ const Game = ({ seeds, onNext } : GameProps) => {
     setBoard(newBoard.slice(0, 36))
     setConstraints(newBoard)
     setMoves([])
-  }, [seeds, boards, constraints, setMoves])
+    setTouched([])
+    setFlawless(true)
+  }, [seeds, boards, constraints, setMoves, setTouched])
 
   useEffect(() => {
     game.checkValid(board, constraints)
@@ -111,7 +115,14 @@ const Game = ({ seeds, onNext } : GameProps) => {
   const handleToggle = useCallback((position: number, direction: ToggleDirection) => {
     updateBoard(position, direction)
     pushMove({ position, direction })
-  }, [updateBoard, pushMove])
+
+    const index = touched.indexOf(position)
+    if (index === -1) {
+      pushTouched(position)
+    } else if (index !== touched.length - 1) {
+      setFlawless(false)
+    }
+  }, [touched, updateBoard, pushMove, pushTouched])
 
   const handleUndo = useCallback(() => {
     if (!moves.length) return
@@ -141,7 +152,7 @@ const Game = ({ seeds, onNext } : GameProps) => {
         <Button variant="default" onClick={handleUndo} disabled={!moves.length}>Undo</Button>
         <Button variant="default" onClick={handleClear}>Clear</Button>
       </Group>
-      <GameCompleteModal show={completed} time={lastTime} gameBoard={board} gameConstraints={constraints} gameMoves={moves} onReplay={handleClear} onNext={handlePlayAgain} onShare={handleShare} />
+      <GameCompleteModal show={completed} flawless={flawless} time={lastTime} gameBoard={board} gameConstraints={constraints} gameMoves={moves} onReplay={handleClear} onNext={handlePlayAgain} onShare={handleShare} />
     </>
   )
 }
