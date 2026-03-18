@@ -94,6 +94,18 @@ const GameCompleteModal = ({ show, flawless, time, gameBoard, gameConstraints, g
     return () => clearInterval(interval)
   }, [displayedMoves, showBoardAtMove])
 
+  useEffect(() => {
+    if (show && fullScreen) {
+      document.body.style.backgroundColor = theme.colors.teal[6]
+    } else {
+      document.body.style.backgroundColor = ''
+    }
+
+    return () => {
+      document.body.style.backgroundColor = ''
+    }
+  }, [show, fullScreen, theme])
+
   return (
     <Modal
       opened={show}
@@ -102,7 +114,7 @@ const GameCompleteModal = ({ show, flawless, time, gameBoard, gameConstraints, g
       size="md"
       radius="xl"
       fullScreen={fullScreen}
-      overlayProps={{ blur: 3 }}
+      overlayProps={ fullScreen ? { fixed: false, color: theme.colors.teal[6], backgroundOpacity: 1 } : { blur: 3 }}
       transitionProps={{ duration: 200, transition: 'fade-up' }}
       padding={0}
       centered>
